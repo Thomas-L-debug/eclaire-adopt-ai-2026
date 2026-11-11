@@ -1,0 +1,6 @@
+.env
+.env.local
+import_studies.py
+.venv/
+__pycache__/
+*.pyc

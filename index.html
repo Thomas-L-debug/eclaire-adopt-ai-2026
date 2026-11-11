@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Éclaire • Essais cliniques vulgarisés</title>
+  <link rel="icon" href="img/favicon.ico" sizes="any">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+
+    :root {
+      --bg: #faf7f0;
+      --ink: #14213a;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--ink);
+    }
+
+    .font-display {
+      font-family: 'Fraunces', 'Inter', serif;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .study-card {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .study-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.12), 0 4px 8px -4px rgb(0 0 0 / 0.08);
+      border-color: #99f6e4;
+    }
+
+    .section-title {
+      font-weight: 600;
+      color: #134e4b;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.6rem;
+    }
+
+    .vulgar-text {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #334155;
+    }
+
+    .vulgar-text p { margin-bottom: 0.6rem; }
+    .vulgar-text p:last-child { margin-bottom: 0; }
+    .vulgar-text ul { padding-left: 0; margin: 0.4rem 0 0.6rem; }
+
+    .vulgar-text-invert {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #e2e8f0;
+    }
+    .vulgar-text-invert p { margin-bottom: 0.6rem; }
+    .vulgar-text-invert p:last-child { margin-bottom: 0; }
+    .vulgar-text-invert ul { padding-left: 0; margin: 0.4rem 0 0.6rem; }
+
+    .modal {
+      animation: modalPop 0.2s ease-out forwards;
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.97) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .pill {
+      transition: all 0.12s ease;
+    }
+
+    .pill.active {
+      background-color: #134e4b;
+      color: white;
+      border-color: #134e4b;
+    }
+
+    .subnav-link {
+      transition: all 0.12s ease;
+    }
+
+    .subnav-link.active {
+      color: #134e4b;
+      border-color: #134e4b;
+      font-weight: 600;
+    }
+
+    .search-input:focus {
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.02em;
+    }
+
+    .study-count {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .masthead-title {
+      min-width: 0;
+      max-width: calc(100vw - 8.5rem);
+    }
+
+    @media (min-width: 640px) {
+      .masthead-title { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="bg-white border-b border-slate-200">
+    <div class="max-w-screen-xl mx-auto px-6 py-6 flex items-center gap-x-4">
+      <img src="img/logo_eclair.jpg" alt="Éclaire" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover flex-none">
+      <div class="masthead-title">
+        <h1 class="font-display text-4xl sm:text-5xl tracking-tight text-slate-900 leading-none">Éclaire</h1>
+        <p class="text-[10px] sm:text-[11px] uppercase tracking-[0.12em] sm:tracking-[0.18em] text-slate-500 mt-1 leading-snug">Des essais cliniques expliqués simplement</p>
+      </div>
+    </div>
+
+  </header>
+
+  <main class="max-w-screen-xl mx-auto px-6 pb-16">
+    <div id="grid-section" class="scroll-mt-6 pt-8">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="flex-1 relative">
+          <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Rechercher par mot-clé (cancer, diabète, poumons, IA, natation...)"
+            class="search-input w-full pl-11 pr-4 py-3 border border-slate-300 bg-white rounded-full text-base focus:outline-none"
+            oninput="filterStudies()">
+        </div>
+        <button onclick="resetFilters()"
+                class="px-5 py-3 text-sm font-medium border border-slate-300 hover:bg-white bg-white rounded-full flex items-center justify-center gap-x-2 transition-colors">
+          <i class="fa-solid fa-undo"></i>
+          <span>Réinitialiser</span>
+        </button>
+      </div>
+
+      <div class="mt-5">
+        <div class="text-xs font-semibold tracking-widest text-slate-500 mb-2">RÉSULTATS</div>
+        <div class="flex flex-wrap gap-2" id="results-filters"></div>
+      </div>
+    </div>
+
+    <section class="pt-8 pb-4">
+      <div class="flex items-end justify-between border-b border-slate-200 pb-3 mb-6">
+        <h2 class="font-display text-2xl text-slate-900">Essais vulgarisés</h2>
+        <div class="flex items-baseline gap-x-1.5 text-sm text-slate-500">
+          <span id="results-count" class="font-semibold text-slate-800 study-count text-lg">0</span>
+          <span>essais correspondent</span>
+        </div>
+      </div>
+      <div id="studies-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+    </section>
+  </main>
+
+  <div id="modal" onclick="if (event.target.id === 'modal') closeModal()"
+       class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div onclick="event.stopImmediatePropagation()" role="dialog" aria-modal="true" aria-labelledby="modal-title"
+         class="modal bg-white w-full max-w-6xl rounded-3xl shadow-2xl max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between px-6 py-3 border-b border-slate-100 flex-none">
+        <div class="text-xs font-semibold tracking-widest text-slate-400 uppercase flex items-center gap-x-2">
+          <i class="fa-solid fa-flask text-teal-700"></i>
+          <span>Éclaire</span>
+        </div>
+        <button onclick="closeModal()"
+                class="w-8 h-8 flex-none flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-2xl transition-colors"
+                aria-label="Fermer">
+          <i class="fa-solid fa-times text-lg"></i>
+        </button>
+      </div>
+      <div class="flex-1 min-h-0 overflow-auto" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    let studies = []
+    let searchTimer = null
+    let requestId = 0
+    let activeResultsFilters = new Set()
+
+    const categoryTheme = {
+      'Cancer':       { grad: 'from-rose-600 to-rose-900',       icon: 'fa-ribbon',           chip: 'bg-rose-100 text-rose-700',       label: 'text-rose-700' },
+      'Diabète':      { grad: 'from-amber-500 to-amber-800',     icon: 'fa-droplet',          chip: 'bg-amber-100 text-amber-700',     label: 'text-amber-700' },
+      'VIH':          { grad: 'from-violet-600 to-violet-900',   icon: 'fa-shield-virus',     chip: 'bg-violet-100 text-violet-700',   label: 'text-violet-700' },
+      'Dépistage':    { grad: 'from-sky-600 to-sky-900',         icon: 'fa-magnifying-glass', chip: 'bg-sky-100 text-sky-700',         label: 'text-sky-700' },
+      'Sport':        { grad: 'from-orange-500 to-orange-800',   icon: 'fa-person-running',   chip: 'bg-orange-100 text-orange-700',   label: 'text-orange-700' },
+      'Métabolisme':  { grad: 'from-lime-600 to-lime-900',       icon: 'fa-dna',              chip: 'bg-lime-100 text-lime-800',       label: 'text-lime-800' },
+      'Yeux':         { grad: 'from-cyan-600 to-cyan-900',       icon: 'fa-eye',              chip: 'bg-cyan-100 text-cyan-800',       label: 'text-cyan-800' },
+      'default':      { grad: 'from-teal-600 to-teal-900',       icon: 'fa-flask',            chip: 'bg-teal-100 text-teal-700',       label: 'text-teal-700' },
+    }
+
+    const TIMELINE_ICONS = ['fa-clipboard-list', 'fa-syringe', 'fa-mobile-screen-button', 'fa-user-doctor', 'fa-chart-line', 'fa-house-medical']
+
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+    }
+
+    function focusSearch() {
+      document.getElementById('grid-section').scrollIntoView({ behavior: 'smooth', block: 'start' })
+      setTimeout(() => document.getElementById('search-input').focus(), 350)
+    }
+
+    function renderFilterButtons() {
+      if (!document.querySelector('[data-results]')) {
+        document.getElementById('results-filters').innerHTML = `
+          <button class="pill px-4 py-1.5 text-sm border border-slate-300 bg-white rounded-full hover:bg-slate-50" data-results="with" onclick="toggleResultsFilter('with')">Résultats disponibles</button>
+          <button class="pill px-4 py-1.5 text-sm border border-slate-300 bg-white rounded-full hover:bg-slate-50" data-results="without" onclick="toggleResultsFilter('without')">Pas encore de résultats</button>
+        `
+      }
+      syncResultsUI()
+    }
+
+    function syncResultsUI() {
+      document.querySelectorAll('[data-results]').forEach(el => {
+        el.classList.toggle('active', activeResultsFilters.has(el.getAttribute('data-results')))
+      })
+    }
+
+    function toggleResultsFilter(value) {
+      if (activeResultsFilters.has(value)) activeResultsFilters.delete(value)
+      else activeResultsFilters.add(value)
+      syncResultsUI()
+      filterStudies()
+    }
+
+    function resetFilters() {
+      activeResultsFilters.clear()
+      document.getElementById('search-input').value = ''
+      syncResultsUI()
+      filterStudies()
+    }
+
+    function filterStudies() {
+      clearTimeout(searchTimer)
+      searchTimer = setTimeout(loadStudies, 180)
+    }
+
+    async function loadStudies() {
+      const id = ++requestId
+      const params = new URLSearchParams()
+      const q = document.getElementById('search-input').value.trim()
+      if (q) params.set('q', q)
+      activeResultsFilters.forEach(value => params.append('results', value))
+
+      try {
+        const response = await fetch('/api/studies?' + params.toString())
+        if (!response.ok) throw new Error(await response.text())
+        const data = await response.json()
+        if (id !== requestId) return
+        studies = data.studies
+        renderFilterButtons()
+        renderStudies(studies)
+        document.getElementById('results-count').textContent = studies.length
+      } catch (error) {
+        if (id !== requestId) return
+        document.getElementById('studies-grid').innerHTML = `
+          <div class="col-span-full py-14 text-center">
+            <p class="text-slate-500">Les études n'ont pas pu être chargées.</p>
+          </div>
+        `
+      }
+    }
+
+    function studyText(study) {
+      return [
+        study.summary, study.explain, study.who, study.participation,
+        ...(study.participation_steps || []), study.where_text, study.why,
+        study.results_short, study.results_detailed, ...(study.ask_doctor || []),
+      ].filter(Boolean).join(' ')
+    }
+
+    function estimateReadingTime(study) {
+      const words = studyText(study).trim().split(/\s+/).filter(Boolean).length
+      return Math.max(2, Math.round(words / 200))
+    }
+
+    function renderStudies(studiesToShow) {
+      const grid = document.getElementById('studies-grid')
+
+      if (studiesToShow.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-14 text-center">
+            <i class="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-3"></i>
+            <p class="text-slate-500">Aucune étude ne correspond à vos critères.</p>
+            <button onclick="resetFilters()" class="mt-3 text-sm underline text-teal-700">Réinitialiser les filtres</button>
+          </div>
+        `
+        return
+      }
+
+      grid.innerHTML = studiesToShow.map(study => {
+        const theme = categoryTheme[study.category] || categoryTheme.default
+        const statusColor = study.status === 'En cours' ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-white'
+        return `
+          <article class="study-card bg-white border border-slate-200 rounded-3xl overflow-hidden flex flex-col cursor-pointer"
+                   tabindex="0" role="button"
+                   data-nct="${escapeHTML(study.nct_id)}"
+                   aria-label="Lire la vulgarisation : ${escapeHTML(study.title)}"
+                   onclick="openStudy(this.dataset.nct)"
+                   onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openStudy(this.dataset.nct) }">
+            <div class="relative h-32 bg-gradient-to-br ${theme.grad} flex items-center justify-center flex-none">
+              <i class="fa-solid ${theme.icon} text-white/90 text-4xl"></i>
+              ${study.status ? `<span class="tag ${statusColor} absolute top-3 left-3">${escapeHTML(study.status)}</span>` : ''}
+              ${study.has_results ? '<span class="tag bg-white/90 text-teal-800 absolute top-3 right-3 flex items-center gap-x-1"><i class="fa-solid fa-chart-line text-[10px]"></i>Résultats</span>' : ''}
+            </div>
+            <div class="p-5 flex flex-col flex-1">
+              ${study.category ? `<span class="text-xs font-semibold tracking-wide uppercase ${theme.label}">${escapeHTML(study.category)}</span>` : `<span class="text-xs font-semibold tracking-wide uppercase text-slate-400">${escapeHTML(study.nct_id)}</span>`}
+              <h3 class="font-display text-lg leading-snug tracking-tight text-slate-900 mt-1.5">${escapeHTML(study.title)}</h3>
+              <p class="mt-2 text-sm text-slate-500 line-clamp-3 flex-1">${escapeHTML(study.summary)}</p>
+              <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400">
+                <span class="flex items-center gap-x-1.5"><i class="fa-regular fa-clock"></i>Lecture ${estimateReadingTime(study)} min</span>
+              </div>
+            </div>
+          </article>
+        `
+      }).join('')
+    }
+
+    function splitBlocks(text) {
+      return String(text || '').split(/\n\n+/).map(b => b.trim()).filter(Boolean)
+    }
+
+    function isBulletLine(line) { return line.trim().startsWith('• ') }
+
+    function renderBlockHTML(block, bulletColor) {
+      const color = bulletColor || 'text-teal-600'
+      const lines = block.split('\n')
+      const bulletLines = lines.filter(isBulletLine)
+      const introLines = lines.filter(l => !isBulletLine(l))
+
+      if (bulletLines.length >= 2 && bulletLines.length >= lines.length - 1) {
+        let html = ''
+        introLines.forEach(l => { if (l.trim()) html += `<p>${escapeHTML(l.trim())}</p>` })
+        html += '<ul class="space-y-1.5">'
+        bulletLines.forEach(l => {
+          html += `<li class="flex items-start gap-x-2"><i class="fa-solid fa-circle-check ${color} text-xs mt-1.5 flex-none"></i><span>${escapeHTML(l.replace(/^•\s*/, ''))}</span></li>`
+        })
+        html += '</ul>'
+        return html
+      }
+
+      return `<p>${escapeHTML(block).replace(/\n/g, '<br>')}</p>`
+    }
+
+    function richTextHTML(body, bulletColor) {
+      return splitBlocks(body).map(b => renderBlockHTML(b, bulletColor)).join('')
+    }
+
+    function stepsHTML(steps) {
+      if (!steps || !steps.length) return ''
+      return `<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">${steps.map((step, index) => `
+        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-center">
+          <div class="w-9 h-9 mx-auto mb-2 rounded-full bg-teal-800 text-white flex items-center justify-center text-xs">
+            <i class="fa-solid ${TIMELINE_ICONS[index % TIMELINE_ICONS.length]}"></i>
+          </div>
+          <div class="text-[11px] leading-snug text-slate-700">${escapeHTML(step)}</div>
+        </div>
+      `).join('')}</div>`
+    }
+
+    function questionListHTML(items, bulletColor) {
+      if (!items || !items.length) return ''
+      return `<ul class="space-y-1.5">${items.map(item => `
+        <li class="flex items-start gap-x-2"><i class="fa-solid fa-circle-check ${bulletColor} text-xs mt-1.5 flex-none"></i><span>${escapeHTML(item)}</span></li>
+      `).join('')}</ul>`
+    }
+
+    function toggleResultsDetail(baseId) {
+      const detail = document.getElementById(baseId + '-detail')
+      const btn = document.getElementById(baseId + '-btn')
+      const opening = detail.classList.contains('hidden')
+      detail.classList.toggle('hidden', !opening)
+      btn.querySelector('span').textContent = opening ? 'Masquer les détails' : 'Voir plus de détails'
+      btn.querySelector('i').classList.toggle('fa-chevron-down', !opening)
+      btn.querySelector('i').classList.toggle('fa-chevron-up', opening)
+    }
+
+    function studyHeader(study) {
+      const theme = categoryTheme[study.category] || categoryTheme.default
+      const statusBadge = study.status === 'En cours' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+      return `
+        <div class="px-6 sm:px-10 pt-6 pb-2">
+          <div class="flex items-center gap-x-2 mb-4 flex-wrap">
+            ${study.status ? `<span class="tag ${statusBadge}">${escapeHTML(study.status)}</span>` : ''}
+            ${study.category ? `<span class="tag ${theme.chip}">${escapeHTML(study.category)}</span>` : ''}
+            <span class="text-xs font-semibold tracking-widest text-slate-400">${escapeHTML(study.nct_id)}</span>
+          </div>
+          <h1 id="modal-title" class="font-display text-3xl sm:text-4xl leading-tight text-slate-900">${escapeHTML(study.title)}</h1>
+          ${study.summary ? `<p class="mt-4 text-lg text-slate-600 max-w-3xl">${escapeHTML(study.summary)}</p>` : ''}
+        </div>
+      `
+    }
+
+    function disclaimer() {
+      return `
+        <p class="text-xs text-slate-400 flex items-start gap-x-2 pt-4 border-t border-slate-100">
+          <i class="fa-solid fa-circle-info mt-0.5 flex-none"></i>
+          <span>Cette vulgarisation est une adaptation simplifiée, à visée pédagogique. Parlez-en avec votre médecin avant toute décision.</span>
+        </p>
+      `
+    }
+
+    function openStudy(nctId) {
+      const study = studies.find(s => s.nct_id === nctId)
+      if (!study) return
+
+      const modal = document.getElementById('modal')
+      modal.classList.remove('hidden')
+      modal.classList.add('flex')
+      document.body.style.overflow = 'hidden'
+
+      let html = studyHeader(study)
+      html += `<div class="px-6 sm:px-10 pb-10 mt-4 grid grid-cols-1 lg:grid-cols-5 gap-8">`
+      html += `<div class="lg:col-span-3 space-y-6 min-w-0">`
+
+      if (study.explain) {
+        html += `
+          <div>
+            <div class="section-title">Explique-moi ce projet</div>
+            <div class="vulgar-text md:columns-2 md:gap-10">${richTextHTML(study.explain)}</div>
+          </div>
+        `
+      }
+
+      if (study.results_short) {
+        const baseId = `results-${study.nct_id}`
+        html += `
+          <div class="bg-teal-50 border border-teal-100 rounded-3xl p-5">
+            <div class="flex items-center gap-x-2 text-sm font-semibold text-teal-950 mb-3">
+              <i class="fa-solid fa-chart-line text-teal-700"></i><span>Résultat</span>
+            </div>
+            <div class="vulgar-text text-[0.9rem] text-teal-950/80">${richTextHTML(study.results_short, 'text-teal-700')}</div>
+            ${study.results_detailed ? `
+              <button id="${baseId}-btn" onclick="toggleResultsDetail('${baseId}')"
+                      class="mt-3 inline-flex items-center gap-x-2 text-sm font-medium text-teal-700 hover:text-teal-900">
+                <span>Voir plus de détails</span>
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+              </button>
+              <div id="${baseId}-detail" class="hidden mt-4 pt-4 border-t border-teal-200">
+                <div class="text-sm font-semibold text-teal-950 mb-2">Résultats de l'étude</div>
+                <div class="vulgar-text text-[0.9rem] text-teal-950/80">${richTextHTML(study.results_detailed, 'text-teal-700')}</div>
+              </div>
+            ` : ''}
+          </div>
+        `
+      }
+
+      if (study.where_text) {
+        html += `
+          <div class="flex items-start gap-x-2.5 bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm text-slate-600">
+            <i class="fa-solid fa-location-dot text-teal-700 mt-0.5 flex-none"></i>
+            <div>
+              <div class="section-title mb-1">Où ?</div>
+              <div class="vulgar-text text-sm">${richTextHTML(study.where_text)}</div>
+            </div>
+          </div>
+        `
+      }
+
+      if (study.ask_doctor && study.ask_doctor.length) {
+        html += `
+          <div class="bg-slate-900 rounded-3xl p-5 text-white">
+            <div class="flex items-center gap-x-2 text-sm font-semibold mb-3">
+              <i class="fa-solid fa-circle-question text-teal-300"></i><span>Que demander à votre médecin ?</span>
+            </div>
+            <div class="vulgar-text-invert">${questionListHTML(study.ask_doctor, 'text-teal-300')}</div>
+          </div>
+        `
+      }
+
+      html += disclaimer()
+      html += `</div>`
+      html += `<div class="lg:col-span-2 space-y-5 min-w-0">`
+
+      if (study.who) {
+        html += `
+          <div class="bg-white border border-slate-200 rounded-3xl p-5">
+            <div class="flex items-center gap-x-2 text-sm font-semibold text-slate-800 mb-3">
+              <i class="fa-solid fa-user-check text-teal-700"></i><span>Pour qui ?</span>
+            </div>
+            <div class="vulgar-text text-[0.9rem]">${richTextHTML(study.who)}</div>
+          </div>
+        `
+      }
+
+      if (study.participation || (study.participation_steps && study.participation_steps.length)) {
+        html += `
+          <div class="bg-white border border-slate-200 rounded-3xl p-5">
+            <div class="flex items-center gap-x-2 text-sm font-semibold text-slate-800 mb-3">
+              <i class="fa-solid fa-route text-teal-700"></i><span>Participation</span>
+            </div>
+            ${study.participation ? `<div class="vulgar-text text-[0.9rem]">${richTextHTML(study.participation)}</div>` : ''}
+            ${stepsHTML(study.participation_steps)}
+          </div>
+        `
+      }
+
+      if (study.why) {
+        html += `
+          <div class="bg-teal-50 border border-teal-100 rounded-3xl p-5">
+            <div class="flex items-center gap-x-2 text-sm font-semibold text-teal-950 mb-3">
+              <i class="fa-solid fa-heart-pulse text-teal-700"></i><span>Pourquoi participer ?</span>
+            </div>
+            <div class="vulgar-text text-[0.9rem] text-teal-950/80">${richTextHTML(study.why, 'text-teal-700')}</div>
+          </div>
+        `
+      }
+
+      html += `</div></div>`
+
+      const body = document.getElementById('modal-body')
+      body.innerHTML = html
+      body.scrollTop = 0
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal')
+      modal.classList.add('hidden')
+      modal.classList.remove('flex')
+      document.body.style.overflow = ''
+    }
+
+    function initKeyboard() {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+          e.preventDefault()
+          document.getElementById('search-input').focus()
+        }
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('modal')
+          if (!modal.classList.contains('hidden')) closeModal()
+        }
+      })
+    }
+
+    function init() {
+      document.getElementById('studies-grid').innerHTML = '<p class="col-span-full py-10 text-center text-slate-400">Chargement des études…</p>'
+      initKeyboard()
+      loadStudies()
+    }
+
+    window.onload = init
+  </script>
+</body>
+</html>
